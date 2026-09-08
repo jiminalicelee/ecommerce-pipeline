@@ -46,6 +46,11 @@
     <!-- Logging -->
     <dependency>
         <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>2.0.12</version>
+    </dependency>
+    <dependency>
+        <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
         <version>2.0.12</version>
     </dependency>
@@ -99,5 +104,22 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <!-- Bundles all dependencies into target/ecommerce-pipeline-1.0-SNAPSHOT.jar
+           so it can be run with `java -cp ... <mainClass>` without Maven. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>
