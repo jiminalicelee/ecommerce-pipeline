@@ -10,12 +10,19 @@ publishes them to Kafka, and a consumer processes them into MongoDB.
 This is early scaffolding, not the full pipeline described above yet:
 
 - **Producer** sends a single hardcoded `"hello world"` record to the
-  `clickstream-events` topic, then exits. No simulated clickstream
-  events yet.
+  `clickstream-events` topic, then exits. It does not yet publish the
+  event model below.
 - **Consumer** subscribes to `clickstream-events` and logs each
   record's key/value/partition/offset to the console. It does not
   write to MongoDB yet; the Mongo container in `docker-compose.yml`
   is started but unused.
+- **Event model** (`com.pipeline.model`) is defined: a sealed `Event`
+  interface implemented by `ProductViewEvent`, `AddToCartEvent`,
+  `RemoveFromCartEvent`, `PurchaseEvent`, and `SearchEvent` records.
+  Jackson (`jackson-databind` + `jackson-datatype-jsr310`) is added as
+  a dependency for future JSON serialization of the event model (the
+  latter needed for `Instant` fields), but nothing in the code uses
+  it yet.
 
 ## Running locally
 
