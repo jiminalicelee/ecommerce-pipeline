@@ -12,7 +12,11 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 import com.pipeline.model.AddToCartEvent;
 import com.pipeline.model.ClickEvent;
 import com.pipeline.model.ProductViewEvent;
@@ -23,19 +27,11 @@ import com.pipeline.serialization.EventDeserializer;
 
 public class EventConsumer {
     private static final String BOOTSTRAP_SERVERS = "localhost:9092";
-    private static final String GROUP_ID = "clickstream-consumer-group";
     private static final String TOPIC = "clickstream-events";
+    private static final String GROUP_ID = "analytics-consumer-group";
+    private static final String MONGO_URI = "mongodb://localhost:27017";
+    private static final String DB_NAME = "ecommerce_analytics";
     private static final Logger log = LoggerFactory.getLogger(EventConsumer.class);
-
-    private static String describe(ClickEvent event) {
-        return switch (event) {
-            case ProductViewEvent e -> "Product viewed: " + e;
-            case AddToCartEvent e -> "Added to cart: " + e;
-            case RemoveFromCartEvent e -> "Removed from cart: " + e;
-            case SearchEvent e -> "Search performed: " + e;
-            case PurchaseEvent e -> "Purchase completed: " + e;
-        };
-    }
 
     public static void main(String[] args) {
         // Create consumer properties
@@ -48,6 +44,17 @@ public class EventConsumer {
 
         // Create consumer
         KafkaConsumer<String, ClickEvent> consumer = new KafkaConsumer<>(properties);
+
+        // Establish a connection to the MongoDB server
+        MongoClient mongoClient = MongoClients.create(MONGO_URI);
+        // Get a handle to the `ecommerce_analytics` database on the MongoDB server
+        MongoDatabase database = mongoClient.getDatabase(DB_NAME);
+
+        MongoCollection<Document> productViewsCollection = database.getCollection("product_views");
+        MongoCollection<Document> addToCartCollection = database.getCollection("add_to_cart");
+        MongoCollection<Document> removeFromCartCollection = database.getCollection("remove_from_cart");
+        MongoCollection<Document> searchCollection = database.getCollection("searches");
+        MongoCollection<Document> purchaseCollection = database.getCollection("purchases");
 
         // Get a reference to the current thread
         final Thread mainThread = Thread.currentThread();
@@ -74,7 +81,15 @@ public class EventConsumer {
                 ConsumerRecords<String, ClickEvent> records = consumer.poll(Duration.ofMillis(100));
 
                 for (ConsumerRecord<String, ClickEvent> record : records) {
-                    log.info(describe(record.value())
+                    ClickEvent event = record.value();
+                    switch (event) {
+                        case ProductViewEvent e -> EventPersister.handleProductView(e, productViewsCollection);
+                        case AddToCartEvent e -> EventPersister.handleAddToCart(e, addToCartCollection);
+                        case RemoveFromCartEvent e -> EventPersister.handleRemoveFromCart(e, removeFromCartCollection);
+                        case SearchEvent e -> EventPersister.handleSearch(e, searchCollection);
+                        case PurchaseEvent e -> EventPersister.handlePurchase(e, purchaseCollection);
+                    }
+                    log.info(EventPersister.describe(event)
                             + " (Key: " + record.key()
                             + ", Partition: " + record.partition()
                             + ", Offset: " + record.offset() + ")");
@@ -82,12 +97,13 @@ public class EventConsumer {
             }
         } catch (WakeupException e) {
             log.info("Wake up exception");
-            // Ignore this as this is an expected exception when closing a consumer
         } catch (Exception e) {
             log.error("Unexpected exception", e);
         } finally {
-            consumer.close(); // This will also commit the offsets if need be
+            consumer.close();
+            mongoClient.close();
             log.info("The consumer is now gracefully closed.");
         }
     }
+
 }

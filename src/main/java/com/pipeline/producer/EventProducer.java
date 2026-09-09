@@ -2,13 +2,13 @@ package com.pipeline.producer;
 
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.pipeline.model.ClickEvent;
 import com.pipeline.serialization.EventSerializer;
 
@@ -54,7 +54,8 @@ public class EventProducer {
                     }
                 });
 
-                Thread.sleep(500);
+                // Simulate realistic-ish traffic pacing
+                Thread.sleep(ThreadLocalRandom.current().nextInt(200, 800));
             }
         } catch (InterruptedException e) {
             log.info("Producer loop interrupted, shutting down.");

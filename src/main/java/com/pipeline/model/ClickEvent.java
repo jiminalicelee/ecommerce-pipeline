@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * Sealed interface — the closed set of event types allowed in this pipeline.
+ * Sealed interface; the closed set of event types allowed in this pipeline.
  * Add a new "permits" entry when adding a new record.
  * ClickEvent
  */

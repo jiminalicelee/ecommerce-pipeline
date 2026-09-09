@@ -35,23 +35,23 @@ public class FakeEventGenerator {
         return new ProductViewEvent(
                 UUID.randomUUID().toString(), // eventId
                 UUID.randomUUID().toString(), // anonymousId
-                null, // userId
+                generateUserId(random), // userId
                 UUID.randomUUID().toString(), // sessionId
                 Instant.now(), // eventTimestamp
                 UUID.randomUUID().toString(), // productId
                 CATEGORIES.get(random.nextInt(CATEGORIES.size())),
-                generateRandomPrice(random));
+                generatePrice(random));
     }
 
     private static ClickEvent generateAddToCart(Random random) {
         return new AddToCartEvent(
                 UUID.randomUUID().toString(), // eventId
                 UUID.randomUUID().toString(), // anonymousId
-                null, // userId
+                generateUserId(random), // userId
                 UUID.randomUUID().toString(), // sessionId
                 Instant.now(), // eventTimestamp
                 UUID.randomUUID().toString(), // productId
-                generateRandomPrice(random),
+                generatePrice(random),
                 random.nextInt(1, 6));
     }
 
@@ -59,11 +59,11 @@ public class FakeEventGenerator {
         return new RemoveFromCartEvent(
                 UUID.randomUUID().toString(), // eventId
                 UUID.randomUUID().toString(), // anonymousId
-                null, // userId
+                generateUserId(random), // userId
                 UUID.randomUUID().toString(), // sessionId
                 Instant.now(), // eventTimestamp
                 UUID.randomUUID().toString(), // productId
-                generateRandomPrice(random),
+                generatePrice(random),
                 random.nextInt(1, 3));
     }
 
@@ -71,7 +71,7 @@ public class FakeEventGenerator {
         return new SearchEvent(
                 UUID.randomUUID().toString(), // eventId
                 UUID.randomUUID().toString(), // anonymousId
-                null, // userId
+                generateUserId(random), // userId
                 UUID.randomUUID().toString(), // sessionId
                 Instant.now(), // eventTimestamp
                 UUID.randomUUID().toString(), // searchQuery
@@ -82,13 +82,17 @@ public class FakeEventGenerator {
         return new PurchaseEvent(
                 UUID.randomUUID().toString(), // eventId
                 UUID.randomUUID().toString(), // anonymousId
-                null, // userId
+                generateUserId(random), // userId
                 UUID.randomUUID().toString(), // sessionId
                 Instant.now(), // eventTimestamp
                 generateLineItems(random));
     }
 
-    private static double generateRandomPrice(Random random) {
+    private static String generateUserId(Random random) {
+        return random.nextBoolean() ? UUID.randomUUID().toString() : null;
+    }
+
+    private static double generatePrice(Random random) {
         double rawPrice = 50.0 + (random.nextDouble() * 495.0); // $50.00–$500.00
         return Math.round(rawPrice * 100.0) / 100.0;
     }
@@ -98,7 +102,7 @@ public class FakeEventGenerator {
         for (int i = 0; i < random.nextInt(1, 11); i++) {
             lineItems.add(new OrderLineItem(
                     UUID.randomUUID().toString(),
-                    generateRandomPrice(random),
+                    generatePrice(random),
                     random.nextInt(1, 4)));
         }
         return lineItems;
