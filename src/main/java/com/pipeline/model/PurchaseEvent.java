@@ -5,9 +5,17 @@ import java.util.List;
 
 /**
  * Fired when a user purchases items in their cart.
+ * PurchaseEvent
+ * @param eventId
+ * @param userId
+ * @param anonymousId
+ * @param sessionId
+ * @param eventTimestamp
+ * @param lineItems
  */
 public record PurchaseEvent(
         String eventId,
+        String userId,
         String anonymousId,
         String sessionId,
         Instant eventTimestamp,
