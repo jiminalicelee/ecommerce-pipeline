@@ -16,13 +16,21 @@ This is early scaffolding, not the full pipeline described above yet:
   record's key/value/partition/offset to the console. It does not
   write to MongoDB yet; the Mongo container in `docker-compose.yml`
   is started but unused.
-- **Event model** (`com.pipeline.model`) is defined: a sealed `Event`
-  interface implemented by `ProductViewEvent`, `AddToCartEvent`,
-  `RemoveFromCartEvent`, `PurchaseEvent`, and `SearchEvent` records.
-  Jackson (`jackson-databind` + `jackson-datatype-jsr310`) is added as
-  a dependency for future JSON serialization of the event model (the
-  latter needed for `Instant` fields), but nothing in the code uses
-  it yet.
+- **Event model** (`com.pipeline.model`) is defined: a sealed
+  `ClickEvent` interface implemented by `ProductViewEvent`,
+  `AddToCartEvent`, `RemoveFromCartEvent`, `PurchaseEvent`, and
+  `SearchEvent` records. Jackson (`jackson-databind` +
+  `jackson-datatype-jsr310`, the latter needed for `Instant` fields)
+  handles JSON (de)serialization, including polymorphism via
+  `@JsonTypeInfo`/`@JsonSubTypes` on `ClickEvent` (an `eventType`
+  property in the JSON picks the concrete record).
+- **Serialization** (`com.pipeline.serialization`) adds
+  `EventSerializer`/`EventDeserializer`, Kafka
+  `Serializer<ClickEvent>`/`Deserializer<ClickEvent>` implementations
+  backed by the Jackson `ObjectMapper` above. They aren't wired into
+  the producer/consumer yet — both still use Kafka's built-in
+  `StringSerializer`/`StringDeserializer` for the `"hello world"`
+  record described below.
 
 ## Running locally
 
